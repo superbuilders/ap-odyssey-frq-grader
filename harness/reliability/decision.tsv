@@ -1,0 +1,14 @@
+id	hypothesis	change	before	after	delta	guards	verdict	note
+000	baseline	A1, shipped round() decode	-	0.0148	-	spread 0.980	BASELINE	1/36 essays unstable across 10 runs
+001	metric noise floor	A1_dup, byte-identical rerun	0.0148	0.0204	+0.0056	spread 0.980, rho +0.996	NOISE FLOOR	gap = 1 essay. Nothing below this counts.
+002	averaging helps round()	A9, avg 9 reads	0.0148	0.0056	-0.0092	spread 0.980, rho +0.999	REJECT (no headroom)	round() already stable; 1/36 -> 1/36. Nothing to win.
+003	calibration costs stability	A1_cal, quantile thresholds	0.0148	0.1463	+0.1315	spread 0.994, rho +0.996	MEASURED COST	10x worse. 1/36 -> 11/36. The coin flips are ours, not Jev's.
+004	averaging rescues calibration	A3_cal, avg 3 + thresholds	0.1463	0.1006	-0.0457	spread 0.998, rho +0.997	WEAK	31% reduction for 3x cost. Poor return => instability is not all noise.
+005	is stability validity?	A1_rev, reversed rubric	0.0148	0.0228	+0.0080	spread 0.684, rho -0.963	CANARY FIRED	Nonsense rubric is just as STABLE. Ordering guard catches it; flip rate never would.
+006	hard-margin abstention	A1_ab05, band within 0.05 of cut	0.1463	0.0790	-0.0673	commit 0.56	REJECT	Refuses on 44% and still flips: the margin's own edges are a new boundary.
+007	measured drift, not assumed	10 runs x 36 essays, per-essay SD	0.18 (assumed)	0.0237 (measured)	-	-	CORRECTION	DRIFT constant in shipped row_b_calibration.py is 7.6x too large.
+008	quantile cuts sit in dense mass	diagnostic, no new calls	-	-	-	-	ROOT CAUSE	Cut 2.0656 has 9/36 essays within 2SD. Widest gap (0.21) sits unused at 1.93.
+009	snap cuts into the gaps	gap-aware, nearest gap >= 4*SD	0.1426	0.0265	-0.1161	acc 25->24/36, CB4 7/9 held	KEEP	Parameter-free given SD. 3SD and 4SD agree. 81% less unstable for 1 essay.
+010	is the gap structure real	split-half, runs 0-4 vs 5-9	-	-	-	max cut disagreement 0.020 < SD 0.0237	CONFIRMED	2 of 3 cuts identical across halves.
+011	PREREGISTERED HOLDOUT READ	gap-aware on sealed 18	0.0617 (shipped)	0.1284 (gap)	+0.0667	acc 7=7, CB4 4=4	REJECT -- REVERSED	5x BETTER on the 36, 2x WORSE on the 18. Gaps in 36 sampled points are sampling noise.
+012	why split-half missed it	methodology	-	-	-	-	LESSON	Resampling RUNS tests measurement noise. Resampling ESSAYS tests generalization. Only did the first.

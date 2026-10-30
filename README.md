@@ -94,6 +94,58 @@ either, at p = 0.136.
 
 ---
 
+## The search loop, and the fix it got wrong
+
+`harness/reliability/` is an iteration loop over Jev question-set and decode
+designs. Because a search over 54 essays will find whatever those 54 essays
+happen to contain, two things are structural rather than left to discipline:
+
+- **A vault.** 2025's 18 essays are sealed behind a read counter on disk
+  (`vault.py`). The loop iterates on the 36 from 2023-24. One read was spent.
+- **A label-free objective.** It minimises how often the same essay gets a
+  different score on an identical re-run. You cannot overfit to scores you
+  never look at. Guards catch the degenerate win: a grader that always says 3
+  never flips, so prediction spread and ordering against baseline Jev both have
+  to hold, and a reversed-rubric arm runs as a canary.
+
+What it found, measured over 10 independent runs:
+
+| threshold placement | unstable /36 | unstable /18 sealed | accuracy /18 sealed |
+|---|---|---|---|
+| uncalibrated `round()` | 1 | 0 | 9 |
+| shipped quantile cuts | 11 | 4 | 7 |
+| cuts moved into the gaps | 2 | **7** | 7 |
+
+**Calibration introduced the instability.** Quantile matching places each cut
+where it reproduces the gold marginal, which is by construction where essays
+are densest; the 1|2 cut has nine of 36 essays within two standard deviations.
+Uncalibrated Jev changes its answer on 1 essay in 36. Calibrated, 11.
+
+**Moving the cuts into the gaps was five times more stable on the 36 and twice
+as unstable on the sealed 18.** It needed no tuned parameter and passed a
+split-half check. The split-half resampled *runs*, which tests whether the gap
+structure survives measurement noise. It cannot test whether it survives a
+different sample of essays, and it does not: gaps between 36 points drawn from
+a continuous distribution are mostly an accident of which 36 you drew. The
+pre-registered prediction is in `PREREGISTERED.md`, written before the read;
+every attempt, kept or rejected, is in `decision.tsv`.
+
+Two things survived, both of which fit nothing:
+
+1. **Average several reads before applying the thresholds.** Flip rate 0.146 ->
+   0.070 at k=9 on the working set, zero on the sealed set, accuracy unchanged.
+   Reducing noise by sqrt(k) is arithmetic, not a fitted parameter.
+2. **A corrected constant.** `DRIFT` in `row_b_calibration.py` was 0.18, an
+   assumption. Measured over 360 calls it is **0.0237**, 7.6x smaller. The old
+   value made the module's own confidence flag warn on 37 of 54 essays where
+   the measured figure is 17.
+
+A reversed rubric is *as stable as* the real one while its ordering inverts to
+rho -0.96. Consistency is not correctness, and is never on its own evidence of
+anything.
+
+---
+
 ## Layout
 
 ```
@@ -106,6 +158,7 @@ harness/
   jev/                     the Jev arm — question sets, state assembly, scoring
   baconwrite/              adapter for BaconWrite's graders (see the correction above)
   contamination/           memorization and id-leak probes
+  reliability/             the search loop — sealed vault, flip-rate metric, arms
 results/                   per-essay predictions, scores only
 ```
 

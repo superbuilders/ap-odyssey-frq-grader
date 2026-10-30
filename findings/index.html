@@ -282,7 +282,7 @@
     <div class="kpi"><div class="v">24 &rarr; 31</div><div class="k">of 54, held out by year. Jev moves from last to level with the Opus panel's 33.</div></div>
     <div class="kpi"><div class="v">29&ndash;30</div><div class="k">of 54 &mdash; what the frozen thresholds deliver on a fresh Jev run. This is the deployment number.</div></div>
     <div class="kpi"><div class="v">0 &rarr; 10</div><div class="k">of the 16 level-4 essays. The entire gain is here.</div></div>
-    <div class="kpi"><div class="v">37/54</div><div class="k">essays sit within Jev's own run-to-run drift of a threshold.</div></div>
+    <div class="kpi"><div class="v">11/36</div><div class="k">essays whose calibrated score actually changes between identical runs. Uncalibrated: 1.</div></div>
   </div>
 
   <p>The headline hides three things, and all of them matter more than the headline.</p>
@@ -308,7 +308,7 @@
   </div>
 
   <p>Level 2 falls from 92% correct to 38%. Net, the shipped mapping is <strong>+3 essays</strong>, not +7 &mdash; nearly everything it gains at the top it hands back in the middle. Telling a 2 from a 3 is the most common real distinction in AP Lang scoring, and at that job this calibration is a regression. That is a genuine split by use case, not a footnote: if you need the middle, keep the uncalibrated head. Adjacent agreement moved the same way &mdash; 52 of 54 within one point after, 53 of 54 before.</p>
-  <p><strong>Most individual scores are coin flips.</strong> Jev's evidence signal drifts up to 0.18 between identical runs, and the usable part of its range is about one point wide, so the three thresholds sit close together. 37 of 54 essays land within 0.18 of one. Re-running the whole study with that drift injected, quantile matching holds at 30.2 ± 2.1 — but the grid-searched cut points, which looked better on the same data, fall to 27.3 ± 2.1 and have about a one-in-ten chance of beating no calibration at all. That is why we chose the mapping that scores lower in-sample: its thresholds do not sit wedged between adjacent training points.</p>
+  <p><strong>Individual scores move between identical runs, and calibration is why.</strong> We later measured this directly rather than inferring it &mdash; ten independent runs over 36 essays. The uncalibrated decode changes its answer on <strong>1 of 36</strong> essays. The calibrated thresholds change it on <strong>11 of 36</strong>, and on 4 of the sealed 18. Quantile matching places each cut where it reproduces the real spread of grades, which is by construction where essays are packed most densely: the 1&#124;2 cut has nine of 36 essays sitting within two standard deviations of it. So the instability is not something Jev had. It is something the fix introduced. Averaging nine reads before applying the thresholds halves it, costs nothing in accuracy, and is the one remedy that tunes no parameter.</p>
   <p><strong>The run-to-run noise is bigger than the improvement.</strong> Fit the same mapping, then score it on the archived signal and on a fresh re-run of the byte-identical request: 27 and 32. A five-point swing from nothing but drift &mdash; larger than the entire gain we are claiming over the uncalibrated baseline. If Row&nbsp;B accuracy feeds a decision, average three reads of the signal before mapping; rank-averaging three reads held 32 with visibly less variance.</p>
 
   <div class="callout">
@@ -316,6 +316,42 @@
     <p>Calibration is worth doing &mdash; it is free, it costs no latency, and it removes a defect that was costing Jev 16 essays before it read a word. It does not change the conclusion, and it is weaker than the headline suggests. The year-holdout says 31; leave-one-out says 27; the thresholds we would actually freeze and ship deliver 29&ndash;30 on a fresh run. With a standard error near &plusmn;3.7 essays, those are one number.</p>
     <p>So is the comparison everyone asks about. We could not run McNemar against the Opus panel &mdash; only its 33/54 summary survives, not its per-essay calls &mdash; so we bounded it instead. On 54 essays, a two-essay gap gives p&nbsp;=&nbsp;0.500 even if every disagreement falls the same way. <strong>You need a gap near nine essays before any arrangement of this corpus reaches significance.</strong> Which means the panel was never significantly ahead of uncalibrated Jev either, at p&nbsp;=&nbsp;0.136. The right reading is not “Jev still loses.” It is that 24, 31 and 33 are three numbers this corpus cannot tell apart, and the gap that justified preferring the expensive panel was never established. Calibration moved Jev from looks-worse to indistinguishable. That changes what you may claim, not what was measured.</p>
   </div>
+
+  <h2>Then we let a search loop off the leash</h2>
+  <p>Everything above tunes a grader by hand. The obvious next move is to automate the tuning, and the obvious danger is that a search over 54 essays finds whatever the 54 essays happen to contain. So before the loop ran, the 18 essays from 2025 went into a vault with a read counter on disk, and the loop was given a target that needs no answer key at all: <strong>how often does the same essay get a different score on an identical re-run?</strong> You cannot overfit to scores you never look at.</p>
+
+  <p>It measured the baseline, found a cause, built a fix, and the fix was wrong. That sequence is the result.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>Threshold placement</th>
+          <th class="num">Unstable<br>on the 36</th>
+          <th class="num">Unstable<br>on the sealed 18</th>
+          <th class="num">Accuracy<br>sealed 18</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="arm">Uncalibrated <span class="sub">argmax round()</span></td><td class="num">1/36</td><td class="num">0/18</td><td class="num">9/18</td></tr>
+        <tr><td class="arm">Shipped quantile cuts</td><td class="num">11/36</td><td class="num">4/18</td><td class="num">7/18</td></tr>
+        <tr class="baseline"><td class="arm">Cuts moved into the gaps <span class="sub">the fix that failed</span></td><td class="num">2/36</td><td class="num">7/18</td><td class="num">7/18</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The cause was real and is worth keeping: quantile matching puts every cut exactly where essays are densest, because reproducing a distribution is precisely that operation. The 1&#124;2 cut had nine of 36 essays within two standard deviations. The widest gap in the whole distribution sat unused a tenth of a point below it.</p>
+  <p>So the loop moved each cut into the nearest gap. On the 36 essays it was derived from this was <strong>five times more stable</strong> at a cost of one essay's accuracy, it needed no tuned parameter once the noise was measured, and a split-half check agreed with itself to within less than one standard deviation. It looked finished.</p>
+  <p>We wrote the prediction down, opened the vault once, and it came back <strong>twice as unstable as the thing it replaced</strong>. Rejected.</p>
+
+  <div class="callout">
+    <div class="eyebrow">Why the check that passed was the wrong check</div>
+    <p>The split-half test resampled <em>runs</em> of the same 36 essays. That measures whether the gap structure survives measurement noise, and it does. It cannot measure whether the gap structure survives a different sample of essays, and it does not. Gaps between 36 points drawn from a continuous distribution are mostly an accident of which 36 you drew. The search found an accident, and every check we ran was blind to that by construction. The sealed 18 was not.</p>
+  </div>
+
+  <p>Two things did survive, and both are the kind that fit nothing. <strong>Averaging several reads before applying the thresholds</strong> cuts the instability roughly in half on the working set and to zero on the sealed set, with no loss of accuracy, because reducing noise by the square root of the sample size is arithmetic rather than a parameter. And a plain measurement correction: we had been assuming Jev's run-to-run drift was <code>0.18</code>, and ten runs across 36 essays put it at <strong>0.0237</strong>. The shipped module carried the wrong constant, which made its own confidence flag warn about two thirds of essays when the real figure is closer to a quarter.</p>
+  <p>One last thing the loop checked, cheaply, that is worth stating: a deliberately reversed rubric is <em>just as stable</em> as the real one, while its ordering inverts to &minus;0.96. Reliability and correctness are independent axes. A grader can be perfectly consistent and perfectly wrong, so consistency is never on its own evidence of anything.</p>
+
 
   <h2>What we'd do next</h2>
   <ul>

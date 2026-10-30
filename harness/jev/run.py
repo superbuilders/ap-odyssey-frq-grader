@@ -126,4 +126,5 @@ def main():
                    "jev_stats": jev.stats()}, f, indent=1)
     print("graded", len(res), "/", len(rs), jev.stats())
 
-main()
+if __name__ == "__main__":
+    main()

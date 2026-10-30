@@ -45,16 +45,45 @@ anchor) moved the top of the raw range by at most 0.03, and a byte-identical
 control re-run reproduced the ceiling to within 0.01. The compression is a
 property of Jev's calibrated heads, not an information deficit.
 
-Caveat: Jev's raw_b drifts up to 0.18 run to run and 37 of the 54 corpus essays
-sit within 0.18 of one of these cut points. An individual Row B score near a
-boundary is a coin flip. Only the aggregate is stable: 30.2 +/- 2.1 of 54 under
-simulated drift, versus 27.3 +/- 2.1 for the grid-searched cut points, which is
-why this mapping was chosen over them.
+STABILITY, MEASURED RATHER THAN ASSUMED (harness/reliability):
+
+Earlier notes put Jev's run-to-run drift at 0.18 and inferred from that that 37
+of 54 essays were coin flips. Both figures were wrong. Ten independent runs over
+36 essays put the per-essay standard deviation at 0.0237 (0.0272 on a sealed
+2025 holdout), roughly 7.6x smaller than the assumed 0.18.
+
+What IS true is that these thresholds cost stability. Measured end to end, same
+essay, repeated identical runs:
+
+    argmax round()      1 of 36 essays unstable    0 of 18 sealed
+    these thresholds   11 of 36 essays unstable    4 of 18 sealed
+
+Quantile matching places each cut where it reproduces the gold marginal, which
+is by construction where essays are densest. The 1|2 cut has nine of the 36
+working essays within two standard deviations of it. So calibration did not
+inherit an instability from Jev; it introduced one.
+
+Averaging k independent reads of raw_b before mapping is the fix that holds up:
+flip rate falls 0.146 -> 0.070 at k=9 on the working set and to zero on the
+sealed set, with accuracy unchanged. It reduces variance by sqrt(k) and fits
+nothing to the corpus, so it carries across populations.
+
+Moving the cuts into the gaps between essays does NOT hold up, and the attempt
+is recorded because it looked convincing: it was five times more stable on the
+36 essays it was derived from and twice as UNSTABLE on the sealed 18. Gaps in a
+36-point sample are mostly sampling noise.
+
+If per-essay stability matters, average several reads, or use the argmax decode
+and give up the top of the scale. Do not re-place these cuts on a sample this
+small.
 """
 
 THRESHOLDS = (2.0656, 2.3061, 2.8359)
 
-DRIFT = 0.18  # Jev's measured run-to-run drift on a score question.
+# Per-essay standard deviation of raw_b across independent identical calls,
+# measured over 10 runs x 36 essays (harness/reliability). A previous value of
+# 0.18 here was an assumption, not a measurement, and was 7.6x too large.
+DRIFT = 0.0237
 
 
 def calibrate_row_b(raw_b: float) -> int:
@@ -66,10 +95,12 @@ def calibrate_row_b(raw_b: float) -> int:
     return 0 if level < 0 else (4 if level > 4 else level)
 
 
-def is_near_boundary(raw_b: float, drift: float = DRIFT) -> bool:
-    """True when raw_b is within Jev's run-to-run drift of a cut point.
+def is_near_boundary(raw_b: float, drift: float = 2 * DRIFT) -> bool:
+    """True when raw_b is within two standard deviations of a cut point.
 
     Callers that surface a single essay's Row B score should treat these as
-    low-confidence rather than reporting them as a definite level.
+    low-confidence rather than reporting them as a definite level. At the
+    measured SD this flags about a quarter of essays, not the two thirds the
+    old 0.18 constant implied.
     """
     return min(abs(raw_b - cut) for cut in THRESHOLDS) < drift
