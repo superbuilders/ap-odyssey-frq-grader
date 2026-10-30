@@ -171,3 +171,112 @@ def r4_nomech(g, m):
     p4 = p3 * d["p_two_expl"]
     if d["rhet"]: p4 *= d["p_rh2"]
     return lvl, _raw(p1, p2, p3, p4)
+
+
+# ---------- V1 family: "mostly general" decided by a count, not by one holistic noul ----------
+def _spec_count(g, m, d):
+    """n_spec over evidence-bearing segments, plus the soft P(majority specific)."""
+    K = d["K"]
+    sp = [g.get("seg%d_spec" % i, 0.0) for i in range(1, K + 1)]
+    on = [sp[i] for i in d["idx"]] or sp
+    n_spec = sum(1 for v in on if v > T)
+    need = (len(on) + 1) // 2          # CB "mostly general" => majority, no free parameter
+    soft = sorted(on, reverse=True)[need - 1] if 0 < need <= len(on) else 0.0
+    return n_spec, max(need, 1), soft
+
+
+def _v_ladder(g, m, spec_ok, spec_soft, four_universal=True):
+    d = _common(g, m)
+    if d["restates"] > T or not d["ev_ge2"]:  lvl = 0
+    elif d["n_expl"] == 0:                    lvl = 1
+    elif not spec_ok:                         lvl = 1
+    elif not (d["lor"] > T):                  lvl = 2
+    elif not d["ev_ge3"]:                     lvl = 2
+    elif not (d["multi"] > T):                lvl = 2
+    else:
+        four = (d["n_ev"] >= 2 and d["n_expl"] == d["n_ev"]) if four_universal else (d["n_expl"] >= 2)
+        lvl = 4 if (four and not (d["mech"] > T)) else 3
+    lvl = _cap_rhet(d, lvl)
+    p1 = (1 - d["restates"]) * (1.0 if d["ev_ge2"] else 0.0)
+    p2 = p1 * d["p_any_expl"] * spec_soft
+    p3 = p2 * d["lor"] * (1.0 if d["ev_ge3"] else 0.0) * d["multi"]
+    if d["rhet"]: p3 *= d["p_rh1"]
+    p4 = p3 * (d["p_all_expl"] if four_universal else d["p_two_expl"]) * (1 - d["mech"])
+    if d["rhet"]: p4 *= d["p_rh2"]
+    return lvl, _raw(p1, p2, p3, p4)
+
+
+def v1_majority(g, m):
+    d = _common(g, m)
+    n_spec, need, soft = _spec_count(g, m, d)
+    return _v_ladder(g, m, n_spec >= need, soft)
+
+
+def v1_atleast2(g, m):
+    d = _common(g, m)
+    n_spec, _need, _s = _spec_count(g, m, d)
+    on = [g.get("seg%d_spec" % i, 0.0) for i in d["idx"]] or [g.get("seg%d_spec" % i, 0.0) for i in range(1, d["K"] + 1)]
+    soft = sorted(on, reverse=True)[1] if len(on) > 1 else 0.0
+    return _v_ladder(g, m, n_spec >= 2, soft)
+
+
+def v1_maj_count4(g, m):
+    d = _common(g, m)
+    n_spec, need, soft = _spec_count(g, m, d)
+    return _v_ladder(g, m, n_spec >= need, soft, four_universal=False)
+
+
+# ---------- R5 family: additive tally instead of a multiplicative veto chain ----------
+# compose_b is a chain of vetoes: reaching 4 needs six gates to pass in a row, so
+# the composition is pessimistic (4/36 fours against 9 in gold) and one gate
+# flipping can move the level by TWO (R2 flips 2023-s2-q3-A between 1 and 3).
+# A tally moves by exactly one per gate and spreads by construction.
+def _tally(g, m, spec_ok, spec_soft, four_gate, four_soft):
+    d = _common(g, m)
+    if d["restates"] > T or not d["ev_ge2"] or d["n_expl"] + d["n_ev"] == 0:
+        lvl = 0
+        p1 = p2 = p3 = p4 = 0.0
+    else:
+        pts = 1
+        pts += 1 if spec_ok else 0
+        pts += 1 if (d["lor"] > T and d["multi"] > T) else 0
+        pts += 1 if four_gate else 0
+        lvl = min(pts, 4)
+        p1 = (1 - d["restates"]) * (1.0 if d["ev_ge2"] else 0.0)
+        p2 = p1 * spec_soft
+        p3 = p2 * d["lor"] * d["multi"]
+        p4 = p3 * four_soft
+    lvl = _cap_rhet(d, lvl)
+    if d["rhet"]:
+        p3 *= d["p_rh1"]; p4 *= d["p_rh1"] * d["p_rh2"]
+    return lvl, _raw(p1, p2, p3, p4)
+
+
+def r5_tally_holistic(g, m):
+    d = _common(g, m)
+    four = d["n_expl"] >= 2 and not (d["mech"] > T)
+    return _tally(g, m, d["specific"] > T, d["specific"], four, d["p_two_expl"] * (1 - d["mech"]))
+
+
+def v2_tally_count(g, m):
+    d = _common(g, m)
+    n_spec, need, soft = _spec_count(g, m, d)
+    four = d["n_expl"] >= 2 and not (d["mech"] > T)
+    return _tally(g, m, n_spec >= need, soft, four, d["p_two_expl"] * (1 - d["mech"]))
+
+
+def v3_tally_count_nomech(g, m):
+    d = _common(g, m)
+    n_spec, need, soft = _spec_count(g, m, d)
+    return _tally(g, m, n_spec >= need, soft, d["n_expl"] >= 2, d["p_two_expl"])
+
+
+def v4_tally_expl_majority(g, m):
+    """Fourth point on a majority of evidence segments explaining, not just two."""
+    d = _common(g, m)
+    n_spec, need, soft = _spec_count(g, m, d)
+    nn = max((d["n_ev"] + 1) // 2, 2)
+    sx = sorted([d["sex"][i] for i in d["idx"]], reverse=True)
+    fsoft = sx[nn - 1] if 0 < nn <= len(sx) else 0.0
+    four = d["n_expl"] >= nn and not (d["mech"] > T)
+    return _tally(g, m, n_spec >= need, soft, four, fsoft * (1 - d["mech"]))

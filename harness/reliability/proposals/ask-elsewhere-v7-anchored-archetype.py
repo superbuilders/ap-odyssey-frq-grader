@@ -1,19 +1,41 @@
-"""ask-elsewhere v7: v6's portrait framing, bound to the verbatim rubric so the
-ordering comes back."""
+"""ask-elsewhere v7: ask which KIND of response this is, not which level it meets.
+
+Five whole-essay portraits, each bound to the verbatim College Board criterion
+and notes for that rung, with the instruction that exactly one kind fits.
+
+MEASURED MECHANISM, which is NOT the one this started from. It does not make
+Jev quieter: at k=9 the per-read SD is 0.0069 against the baseline's 0.0077,
+and at k=1 it is 0.0204 against 0.0221, an 8% difference that cannot explain an
+81% drop in flips. What it does is break up a DEGENERACY. The baseline Row B
+question returns near-identical numbers for a block of essays -- nine of the 36
+land inside a 0.05-wide band at 2.04-2.09 -- and the 2.0656 quantile cut is
+fitted to the gold marginal, which puts it inside that block by construction.
+Those nine essays are coin flips no amount of averaging fixes. Asking for a
+kind rather than a level spreads the same nine essays over 0.18, leaving three
+within +-0.05 of that cut instead of nine, so the cut lands between essays.
+
+CAVEAT, stated because the harness has been burned by exactly this shape
+before (decision.tsv 011): the de-clustering was measured on the same 36 essays
+the cuts were fitted to. Unlike the gap-aware thresholds of 011, nothing here
+was fitted -- the rungs are the verbatim rubric and the cuts were never looked
+at while writing them -- but selection over nine variants on 36 essays is still
+selection. The transfer claim is untested; the vault was not opened.
+"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "jev"))
 import questions as Q
 from rubric import cell
 
 NAME = "ask-elsewhere v7 anchored archetype"
-RATIONALE = ("v6 was the only variant that lowered per-read SD (0.0177 vs baseline 0.0221) at "
-             "unchanged resolving power, so 'identify which kind of response this is' really "
-             "does peak Jev's mass where 'which level does it meet' smears it. v6 failed "
-             "ordering at 0.779 because the portraits drifted off the rubric construct. Keep "
-             "the portrait framing and the exactly-one-fits instruction, but bind each portrait "
-             "to the verbatim College Board criterion for that rung, so the construct is "
-             "identical to baseline and only the cognitive task changes.")
-K = 1
+RATIONALE = ("Do not ask which rubric level the response meets; ask which of five kinds of "
+             "response it IS, each kind bound to the verbatim criterion for that rung. "
+             "Measured: this does not lower Jev's noise (k=9 SD 0.0069 vs 0.0077 baseline). "
+             "It de-clusters. The baseline question piles nine of 36 essays into a 0.05-wide "
+             "band straddling the 2.0656 cut, which quantile-matching put there by "
+             "construction; the portrait question spreads those nine over 0.18 and leaves "
+             "three near the cut. k=9 flip 0.0130/0.0099 over two runs vs 0.0698 baseline, "
+             "1/36 unstable vs 7/36, spread 0.954, ordering rho +0.952.")
+K = 9
 
 
 def _src(rec):

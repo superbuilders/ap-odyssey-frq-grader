@@ -24,3 +24,7 @@ id	hypothesis	change	before	after	delta	guards	verdict	note
 022	what the apparent wins actually were	dist-to-cut diagnostic	med dist 0.088 (control)	0.121-0.265	+	flip fell as dist rose, SD flat	SAME TRAP	Signal moved relative to FIXED cuts. Identical mechanism to gap-aware, which reversed on the holdout.
 023	tripwire: stability vs accuracy	all 17 measured variants	control 24-25/36	stable ones 10-20/36	-	flip and acc inversely related	REJECT ALL	Proposals got stable by becoming LESS DISCRIMINATING, not sharper. Partial slide to the constant grader.
 024	did any single guard catch it alone	spread vs ordering vs tripwire	-	-	-	trim-minimal: spread 0.920 PASSED, ordering +0.862, acc 20/36	GUARDS WORK AS A SET	Spread alone would have let it through. Ordering + tripwire caught it.
+025	5 agent lanes complete	51 variants across 5 lanes	-	-	-	4 lanes claimed guarded wins	REVIEW	My mid-run claim "not one reduced SD" was wrong: v9 reached 0.0187 vs control 0.0220.
+026	at k=9 SD is uniform	control 0.0076 vs v9 0.0069	-	-	-	flip differs 8x at identical SD	MECHANISM	Once averaging crushes noise, remaining flip differences are PURE threshold position.
+027	PREREGISTERED VAULT READ 2	disjoint-levels v9, k=9, sealed 18	0.0000 (control)	0.0000 (v9)	0	acc 7=7, CB4 4/7 -> 2/7	REJECT	Nothing to improve: control is already perfectly stable on the holdout. v9 only cost CB4 recall.
+028	AVERAGING CONFIRMED ON HELD-OUT DATA	sealed 18, k=1 vs k=9	4/18 unstable (k=1)	0/18 (k=9)	-4	-	KEEP	The one lever that transfers. Verified on data no tuning ever touched.

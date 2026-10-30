@@ -380,7 +380,7 @@
   <p>Nine reads issued concurrently take <strong>451&nbsp;ms</strong> against 318&nbsp;ms for one, so the under-a-second claim survives; run them in series and it would be 2.8&nbsp;seconds. Cost goes to about a fifth of a cent per essay, still roughly a hundredth of the Opus panel.</p>
 
   <h3>Then we asked five agents to beat it</h3>
-  <p>Each took a different mechanism for why the question might be noisy: make the level descriptions mutually exclusive, strip material out of the prompt, compose an integer from yes/no questions so there is no threshold to cross, restructure each level around one observable property, or ask a different question entirely and map its answer. <strong>Twenty-eight distinct variants</strong> were written and measured against the frozen metric.</p>
+  <p>Each took a different mechanism for why the question might be noisy: make the level descriptions mutually exclusive, strip material out of the prompt, compose an integer from yes/no questions so there is no threshold to cross, restructure each level around one observable property, or ask a different question entirely and map its answer. <strong>Fifty-one distinct variants</strong> were written and measured against the frozen metric.</p>
   <p><strong>Essentially none of them reduced the per-read noise.</strong> Variants landed between 0.018 and 0.048 against untouched controls at 0.022 to 0.025. Rewording the question, cutting the source packet from eleven thousand characters to two thousand, removing the duplicated essay segments, dropping the stated-facts block &mdash; none of it moved the number Jev's score head wobbles by. One variant did reach 0.0177, about a fifth below the controls, and it failed the ordering guard at +0.779.</p>
 
   <div class="callout">
@@ -390,7 +390,35 @@
     <p>The decisive number is the third one. Flip rate correlates with per-read noise at <strong>rho &minus;0.42</strong> &mdash; the wrong sign. If these questions were genuinely sharper, less wobble would come with fewer flips and the correlation would be positive. Instead the most stable variants are the <em>noisiest</em> per read; they simply put their noise where it does not cross a cut. These questions were not getting sharper. They were getting <strong>less discriminating</strong>, drifting toward the constant grader that never flips because it never says anything, and stopping just short of where the spread guard alone would have caught them. Ordering and the tripwire caught them together.</p>
   </div>
 
-  <p>So the answer is narrow and useful. <strong>Jev's score head has a run-to-run spread of about 0.023 and you cannot talk it down.</strong> Not with better wording, not with less context, not with a different scale. The same shape as round one, where four attempts failed to widen the signal's range: what the model will and will not do is a property of the model, not of how you ask. The only lever that works on variance is averaging, and it works because it is arithmetic rather than persuasion.</p>
+  <p>One family was a real exception, and it earned the second vault read. Relocating College&nbsp;Board's own per-level decision bullets into each level's criterion string &mdash; no new words, only their text moved &mdash; brought the per-read spread to 0.0187 against the control's 0.0220, the only variants to beat it, and cut the flip rate eightfold with both guards intact.</p>
+  <p>Then we checked it against the noise at nine reads, and the mechanism gave itself away. <strong>At nine reads the control and the candidate have the same per-read spread</strong>, 0.0076 against 0.0069. Identical noise, eightfold difference in flips. Whatever the candidate was doing, it was not reducing noise; it was moving the signal away from the cuts. We wrote the prediction down and opened the vault.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>Sealed 18, nine reads averaged</th>
+          <th class="num">Flip rate</th>
+          <th class="num">Unstable</th>
+          <th class="num">Accuracy</th>
+          <th class="num">Level-4 recall</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="arm">Control <span class="sub">the question as shipped</span></td><td class="num">0.0000</td><td class="num">0/18</td><td class="num">7/18</td><td class="num">4/7</td></tr>
+        <tr class="baseline"><td class="arm">Best of 51 variants</td><td class="num">0.0000</td><td class="num">0/18</td><td class="num">7/18</td><td class="num">2/7</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>There was nothing to improve. At nine reads the untouched question is <em>already perfectly stable</em> on essays it has never been tuned against. The best candidate out of fifty-one bought no stability that averaging had not already bought, matched the accuracy, and halved the level-4 recall to pay for it.</p>
+
+  <div class="callout">
+    <div class="eyebrow">The number that actually matters</div>
+    <p>Round one measured the sealed 18 at one read: <strong>4 of 18 essays unstable</strong>. At nine reads it is <strong>0 of 18</strong>. That is the whole result, confirmed on data no tuning has ever touched. Averaging is not merely the best lever we found, it is the only one that survived contact with held-out essays &mdash; twice.</p>
+  </div>
+
+  <p>So the answer is narrow and useful. <strong>Jev's score head has a run-to-run spread of about 0.023, and the most a question redesign bought was fifteen per cent of that</strong> &mdash; less than averaging gets for free, and swamped entirely once you average. Everything beyond that was the signal shifting relative to fixed cuts, which looks spectacular on the essays you tuned against and is worth nothing on the ones you did not. The same shape as round one, where four attempts failed to widen the signal's range: what the model will and will not do is a property of the model, not of how you ask. Averaging works because it is arithmetic rather than persuasion.</p>
 
 
   <h2>What we'd do next</h2>

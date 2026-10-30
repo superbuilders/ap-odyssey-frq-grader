@@ -61,3 +61,27 @@ def line(mt):
             % (mt["label"], mt["k"], mt["flip_rate"], mt["unstable"], mt["spread"],
                " " if ok_s else "!", mt.get("ordering_vs_baseline", 0), " " if ok_o else "!",
                mt["sd"], mt["marginal"]))
+
+
+GOLD = {}
+try:
+    for _l in open("/tmp/jev-arm/keys/labels.jsonl", encoding="utf-8"):
+        _r = json.loads(_l)
+        GOLD[_r["essay_id"]] = _r["row_b"]
+except Exception:
+    pass
+
+
+def accuracy(levels):
+    """TRIPWIRE ONLY (decision.tsv 023). Never selected on, always reported.
+
+    A variant can pass spread and ordering and still have won by becoming less
+    discriminating; trim-minimal did exactly that. Control is 24-25/36.
+    """
+    if not GOLD:
+        return None, None
+    modes = {e: max(set(v), key=v.count) for e, v in levels.items()}
+    ids = [e for e in modes if e in GOLD]
+    exact = sum(1 for e in ids if modes[e] == GOLD[e])
+    within1 = sum(1 for e in ids if abs(modes[e] - GOLD[e]) <= 1)
+    return exact, within1

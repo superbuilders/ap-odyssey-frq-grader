@@ -69,3 +69,18 @@ Averaging has a floor. At k=9, 8 of 36 essays still sit within two standard
 errors of a cut; as k grows that falls to 2, and those two sit 0.0003 and
 0.0011 from a threshold. They are genuinely on the line, and no number of
 reads resolves them. `is_near_boundary(raw_b, k)` flags them.
+
+Round 2 put five agent lanes on the question itself: 51 variants across
+mutually exclusive level descriptions, stripped state, integer composition,
+one-property-per-level, and asking a different question entirely. The best of
+them cut per-read noise by about 15% (0.0187 against a 0.0220 control). At k=9
+that is invisible, because averaging has already taken both to ~0.007.
+
+The second vault read settled it. On the sealed 18 at k=9 the untouched
+question is ALREADY perfectly stable, 0 of 18. The best of the 51 bought no
+stability on top of that, matched accuracy at 7/18, and halved level-4 recall
+from 4/7 to 2/7. There was nothing to improve.
+
+The number that matters: the sealed 18 goes from 4 of 18 unstable at one read
+to 0 of 18 at nine. Averaging is the only lever that survived a holdout, and
+it survived twice.
