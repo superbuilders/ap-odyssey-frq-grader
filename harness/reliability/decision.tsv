@@ -12,3 +12,15 @@ id	hypothesis	change	before	after	delta	guards	verdict	note
 010	is the gap structure real	split-half, runs 0-4 vs 5-9	-	-	-	max cut disagreement 0.020 < SD 0.0237	CONFIRMED	2 of 3 cuts identical across halves.
 011	PREREGISTERED HOLDOUT READ	gap-aware on sealed 18	0.0617 (shipped)	0.1284 (gap)	+0.0667	acc 7=7, CB4 4=4	REJECT -- REVERSED	5x BETTER on the 36, 2x WORSE on the 18. Gaps in 36 sampled points are sampling noise.
 012	why split-half missed it	methodology	-	-	-	-	LESSON	Resampling RUNS tests measurement noise. Resampling ESSAYS tests generalization. Only did the first.
+013	ROUND 2 baseline	A9_cal, avg 9 reads + shipped cuts	0.1463 (k=1)	0.0704	-0.0759	spread 0.998, rho +0.998	NEW BASELINE	Averaging is the only round-1 survivor. Fits nothing.
+014	deep pool, offline k-sweep	90 independent reads x 36 essays	-	-	-	0 errors, 3240 calls	LEVER	Disjoint partitions => any k measurable offline, no reused reads.
+015	does averaging have a floor	k = 1,2,3,5,6,9,10,15,18,30,45	15/36 (k=1)	2/36 (k=45)	-13	acc flat 24-26/36 at every k	FLOOR FOUND	k=9 gets 5/36. Beyond that returns are tiny.
+016	what survives at k=45	2 essays identified	-	-	-	-	STRUCTURAL	Both sit ON a cut: 0.0003 and 0.0011 away, vs 45-read-mean SE of 0.0036-0.0048. Not noise. Unresolvable by reading more.
+017	does k=9 break the latency claim	measured p50 over 6 essays	318ms (k=1)	451ms (k=9 parallel)	+133ms	k=9 sequential would be 2769ms	KEEP	Averaging is nearly free in wall-clock if the 9 reads are issued concurrently.
+018	boundary flag should scale with k	is_near_boundary(raw_b, k)	fixed band	2*SD/sqrt(k)	-	flags 16/36 at k=1, 7/36 at k=9	SHIPPED	Both structurally-stuck essays stay flagged at every k, as they must.
+019	METHOD FIX: unstable count is R-dependent	resample R=5..90 from pool	9.4 (R=5)	15.0 (R=90)	-	flip rate flat 0.1321-0.1335 at every R	CORRECTION	Quote flip rate as the metric. Any "n/36 unstable" must carry its R.
+020	R-independent structural floor	essays within 2*SE of a cut	14/36 (k=1)	2/36 (k->inf)	-12	-	FLOOR	k=9 -> 8/36. Asymptote is the 2 essays sitting 0.0003 and 0.0011 from a cut.
+021	agent lanes: can rewording cut variance	5 lanes, 13+ variants measured	SD 0.0220 (control)	SD 0.0213-0.0351	~0	none below control	NEGATIVE	NOT ONE variant reduced per-read SD. Variance is a property of Jev's score head, not the prompt.
+022	what the apparent wins actually were	dist-to-cut diagnostic	med dist 0.088 (control)	0.121-0.265	+	flip fell as dist rose, SD flat	SAME TRAP	Signal moved relative to FIXED cuts. Identical mechanism to gap-aware, which reversed on the holdout.
+023	tripwire: stability vs accuracy	all 17 measured variants	control 24-25/36	stable ones 10-20/36	-	flip and acc inversely related	REJECT ALL	Proposals got stable by becoming LESS DISCRIMINATING, not sharper. Partial slide to the constant grader.
+024	did any single guard catch it alone	spread vs ordering vs tripwire	-	-	-	trim-minimal: spread 0.920 PASSED, ordering +0.862, acc 20/36	GUARDS WORK AS A SET	Spread alone would have let it through. Ordering + tripwire caught it.

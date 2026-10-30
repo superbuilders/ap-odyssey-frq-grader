@@ -95,12 +95,20 @@ def calibrate_row_b(raw_b: float) -> int:
     return 0 if level < 0 else (4 if level > 4 else level)
 
 
-def is_near_boundary(raw_b: float, drift: float = 2 * DRIFT) -> bool:
-    """True when raw_b is within two standard deviations of a cut point.
+def is_near_boundary(raw_b: float, k: int = 1, drift: float = None) -> bool:
+    """True when raw_b is within two standard errors of a cut point.
 
-    Callers that surface a single essay's Row B score should treat these as
-    low-confidence rather than reporting them as a definite level. At the
-    measured SD this flags about a quarter of essays, not the two thirds the
-    old 0.18 constant implied.
+    `k` is how many independent reads were averaged to produce raw_b. The
+    standard error of that mean is DRIFT / sqrt(k), so the warning band shrinks
+    as the caller pays for more reads. A fixed band would over-warn at k=9 and
+    under-warn at k=1.
+
+    Callers that surface a single essay's Row B score should treat a flagged
+    essay as low-confidence rather than reporting a definite level. Two essays
+    in the 36-essay working set stay flagged at any k, because their signal
+    sits within 0.001 of a cut; those are genuinely on the line and no amount
+    of reading resolves them.
     """
+    if drift is None:
+        drift = 2.0 * DRIFT / (k ** 0.5)
     return min(abs(raw_b - cut) for cut in THRESHOLDS) < drift
