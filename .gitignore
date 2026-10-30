@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------------------
+# College Board material — NEVER COMMIT
+#
+# Git history is permanent. Essay text, verbatim scoring guidelines and the
+# exam PDFs are College Board copyright; their published grant covers limited
+# reproduction by AP teachers for face-to-face teaching, not electronic
+# redistribution. The harness FETCHES this material on demand — run
+# harness/corpus/build.py and you get your own local copy.
+#
+# The one deliberate exception is the handful of rubric criteria quoted
+# on-screen in mockups/, which are illustrative and attributed in the UI.
+# ---------------------------------------------------------------------------
+corpus/
+*.pdf
+corpus.jsonl
+samples.json
+rubric*.md
+rubrics.json
+blind*.jsonl
+ocr/
+ocr_verified/
+*-layout.txt
+*-flow.txt
+stimulus.txt
+
+# Raw grading output — carries essay ids and, in some arms, essay text
+results_raw*.json
+results_run*.json
+*.results.jsonl
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Tooling
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

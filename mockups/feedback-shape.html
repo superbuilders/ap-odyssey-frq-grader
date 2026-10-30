@@ -1,0 +1,169 @@
+<style>
+  .bbwrap { font-family: Inter, -apple-system, system-ui, sans-serif; }
+  .bb { background:#f1f1f1; border:1px solid #d7d7d7; border-radius:10px; overflow:hidden; }
+  .bb-top { background:#e6edf8; padding:.55rem .9rem; display:flex; align-items:center; gap:.6rem;
+            border-bottom:1px solid #c9d4e8; font-size:.72rem; color:#2a3b5f; font-weight:600; }
+  .bb-dot { width:9px; height:9px; border-radius:50%; background:#b91c1c; }
+  .bb-top .clock { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:500; color:#4a5a7a; }
+  .bb-body { display:flex; gap:0; }
+  .bb-pane { padding:1rem 1.1rem; }
+  .bb-essay { background:#fff; flex:1.35; border-right:1px solid #e2e2e2; }
+  .bb-side  { background:#fff; flex:1; }
+  .bb-full  { background:#fff; width:100%; }
+  .prompt { font-family:Georgia,'Times New Roman',serif; font-size:.78rem; line-height:1.5; color:#4b4b4b;
+            background:#fafafa; border-left:3px solid #3151c9; padding:.5rem .7rem; margin-bottom:.8rem; }
+  .essay { font-family:Georgia,'Times New Roman',serif; font-size:.82rem; line-height:1.72; color:#1d1d1f; }
+  .essay p { margin:0 0 .6rem; }
+  .lbl { font-size:.6rem; letter-spacing:.09em; text-transform:uppercase; color:#8a8a8f; font-weight:700; margin-bottom:.45rem; }
+
+  .row { border:1px solid #e4e4e7; border-radius:8px; padding:.6rem .7rem; margin-bottom:.5rem; background:#fff;
+         box-shadow:0 2px 14px rgba(0,0,0,.04); }
+  .row-head { display:flex; align-items:center; gap:.5rem; margin-bottom:.3rem; }
+  .row-name { font-size:.78rem; font-weight:650; color:#1d1d1f; }
+  .pts { margin-left:auto; font-size:.74rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .earned  { background:#F0FDF4; border-color:#bbf7d0; } .earned .pts  { color:#15803d; }
+  .online  { background:#FEFCE8; border-color:#fde68a; } .online .pts  { color:#a16207; }
+  .missed  { background:#FEF2F2; border-color:#fecaca; } .missed .pts  { color:#b91c1c; }
+  .crit { font-family:Georgia,serif; font-size:.71rem; line-height:1.5; color:#55555a; margin:.25rem 0 0; }
+  .tip  { font-size:.71rem; line-height:1.5; color:#1d4ed8; margin-top:.4rem;
+          border-top:1px dashed #dcdce0; padding-top:.4rem; }
+  .tip b { color:#1e3a8a; }
+  .band { font-size:.6rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+          padding:.1rem .4rem; border-radius:99px; }
+  .b-e { background:#15803d; color:#fff; } .b-o { background:#a16207; color:#fff; } .b-m { background:#b91c1c; color:#fff; }
+
+  .total { display:flex; align-items:baseline; gap:.45rem; margin-bottom:.7rem; }
+  .total .n { font-size:1.7rem; font-weight:700; color:#1d1d1f; font-variant-numeric:tabular-nums; }
+  .total .d { font-size:.85rem; color:#86868b; }
+
+  mark.m-a { background:#dcfce7; border-bottom:2px solid #22c55e; padding:.04em 0; }
+  mark.m-b { background:#dbeafe; border-bottom:2px solid #3b82f6; padding:.04em 0; }
+  mark.m-c { background:#fee2e2; border-bottom:2px solid #ef4444; padding:.04em 0; }
+  .margin-note { font-family:Inter,sans-serif; font-size:.62rem; color:#fff; border-radius:4px;
+                 padding:.08em .35em; margin-left:.25rem; vertical-align:.12em; font-weight:650; }
+  .mn-a { background:#16a34a; } .mn-b { background:#2563eb; } .mn-c { background:#dc2626; }
+
+  .coach { background:linear-gradient(135deg,#1e3a8a,#3151c9); color:#fff; border-radius:9px; padding:.9rem 1rem; margin-bottom:.75rem; }
+  .coach .eyebrow { font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; opacity:.75; font-weight:700; }
+  .coach h4 { margin:.3rem 0 .35rem; font-size:1rem; font-weight:650; }
+  .coach p { margin:0; font-size:.76rem; line-height:1.55; opacity:.93; }
+  .meter { height:5px; background:rgba(255,255,255,.25); border-radius:99px; margin:.6rem 0 .3rem; overflow:hidden; }
+  .meter i { display:block; height:100%; background:#fbbf24; border-radius:99px; }
+  .meter-cap { font-size:.63rem; opacity:.8; display:flex; justify-content:space-between; }
+  .mini { display:flex; gap:.4rem; }
+  .mini div { flex:1; border:1px solid #e4e4e7; border-radius:7px; padding:.45rem .5rem; text-align:center; background:#fff; }
+  .mini .mn { font-size:.6rem; color:#86868b; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .mini .mv { font-size:.95rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .facts { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.6rem; }
+  .fact { font-size:.62rem; background:#f4f4f5; border:1px solid #e4e4e7; border-radius:5px; padding:.15rem .4rem; color:#52525b; }
+  .fact b { color:#18181b; font-variant-numeric:tabular-nums; }
+</style>
+
+<h2>How should the feedback reach the student?</h2>
+<p class="subtitle">Same essay, same Jev scores, three different products. AP Lang Q2 — Rhetorical Analysis, scored 4/6.</p>
+
+<div class="options" style="margin-bottom:1.5rem">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div><div class="content">
+      <h3>Rubric scorecard</h3><p>Essay on the left, the three official rows on the right. The student learns the rubric itself.</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div><div class="content">
+      <h3>Marked-up essay</h3><p>Their own writing is the hero, highlighted where each point was won or lost.</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div><div class="content">
+      <h3>Next-point coach</h3><p>Leads with the one move that earns the next point. Score is secondary.</p></div>
+  </div>
+</div>
+
+<!-- ============ A ============ -->
+<div class="bbwrap section">
+  <div class="label">Option A — Rubric scorecard</div>
+  <div class="bb">
+    <div class="bb-top"><span class="bb-dot"></span> English Language · Q2 Rhetorical Analysis
+      <span class="clock">Submitted · 38:12</span></div>
+    <div class="bb-body">
+      <div class="bb-pane bb-essay">
+        <div class="prompt">Thatcher, <i>Eulogy for Ronald Reagan</i> (2004). Analyze the rhetorical choices Thatcher makes to convey her message.</div>
+        <div class="essay">
+          <p>In her eulogy for Ronald Reagan, Thatcher uses a respectful but firm tone to honor her friend while defending a legacy she knows is contested.</p>
+          <p>She returns to the word "freedom" again and again, tying Reagan's name to the idea itself so that an attack on him becomes an attack on it. By calling him a man who "sought to mend," she reframes his hardest Cold War choices as healing rather than aggression, which disarms a reader who came in skeptical…</p>
+        </div>
+      </div>
+      <div class="bb-pane bb-side">
+        <div class="total"><span class="n">4</span><span class="d">/ 6 points</span></div>
+        <div class="row earned">
+          <div class="row-head"><span class="row-name">Row A · Thesis</span><span class="band b-e">Earned</span><span class="pts">1/1</span></div>
+          <p class="crit">“Responds to the prompt with a defensible thesis that analyzes the writer's rhetorical choices.”</p>
+        </div>
+        <div class="row online">
+          <div class="row-head"><span class="row-name">Row B · Evidence &amp; Commentary</span><span class="band b-o">3 of 4</span><span class="pts">3/4</span></div>
+          <p class="crit">“Explains how <i>some</i> of the evidence supports a line of reasoning.” The 4th point needs <i>consistently</i>, and multiple choices tied to purpose.</p>
+          <p class="tip"><b>To earn the 4th:</b> you explain the "freedom" repetition well, but the "sought to mend" quote is dropped without saying what it does for her argument. Finish that move.</p>
+        </div>
+        <div class="row missed">
+          <div class="row-head"><span class="row-name">Row C · Sophistication</span><span class="band b-m">Not yet</span><span class="pts">0/1</span></div>
+          <p class="crit">“Explains the significance or relevance of the writer's rhetorical choices given the rhetorical situation.”</p>
+          <p class="tip"><b>Closest path:</b> you noticed the audience “came in skeptical.” Say <i>why that audience, in 2004,</i> made that choice necessary — that's the sophistication point.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="bbwrap section">
+  <div class="label">Option B — Marked-up essay</div>
+  <div class="bb">
+    <div class="bb-top"><span class="bb-dot"></span> English Language · Q2 Rhetorical Analysis
+      <span class="clock">4 / 6 points</span></div>
+    <div class="bb-body">
+      <div class="bb-pane bb-full">
+        <div class="facts">
+          <span class="fact">Measured, not judged:</span>
+          <span class="fact">words <b>412</b></span><span class="fact">paragraphs <b>4</b></span>
+          <span class="fact">quoted spans <b>2</b></span><span class="fact">mechanics <b>clean</b></span>
+        </div>
+        <div class="essay">
+          <p><mark class="m-a">In her eulogy for Ronald Reagan, Thatcher uses a respectful but firm tone to honor her friend while defending a legacy she knows is contested.</mark><span class="margin-note mn-a">A · thesis +1</span></p>
+          <p><mark class="m-b">She returns to the word "freedom" again and again, tying Reagan's name to the idea itself so that an attack on him becomes an attack on it.</mark><span class="margin-note mn-b">B · choice → purpose ✓</span> By calling him a man who <mark class="m-c">"sought to mend,"</mark><span class="margin-note mn-c">B · quote, no purpose</span> she reframes his hardest Cold War choices as healing rather than aggression, <mark class="m-c">which disarms a reader who came in skeptical…</mark><span class="margin-note mn-c">C · audience noticed, not explained</span></p>
+        </div>
+        <div style="margin-top:.8rem; display:flex; gap:.4rem;">
+          <div class="row earned" style="flex:1;margin:0"><div class="row-head"><span class="row-name">A · Thesis</span><span class="pts">1/1</span></div></div>
+          <div class="row online" style="flex:1;margin:0"><div class="row-head"><span class="row-name">B · Evidence</span><span class="pts">3/4</span></div></div>
+          <div class="row missed" style="flex:1;margin:0"><div class="row-head"><span class="row-name">C · Sophistication</span><span class="pts">0/1</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="bbwrap section">
+  <div class="label">Option C — Next-point coach</div>
+  <div class="bb">
+    <div class="bb-top"><span class="bb-dot"></span> English Language · Q2 Rhetorical Analysis
+      <span class="clock">Attempt 1</span></div>
+    <div class="bb-body">
+      <div class="bb-pane bb-full">
+        <div class="coach">
+          <div class="eyebrow">Your next point</div>
+          <h4>Sophistication — you're on the line.</h4>
+          <p>You already noticed the audience “came in skeptical.” That's the hard half. Now say <i>why</i> a 2004 audience made Thatcher's softening necessary — one sentence turns an observation into the point.</p>
+          <div class="meter"><i style="width:49%"></i></div>
+          <div class="meter-cap"><span>Not yet</span><span>On the line</span><span>Earned</span></div>
+        </div>
+        <div class="mini">
+          <div><div class="mn">Thesis</div><div class="mv" style="color:#15803d">1/1</div></div>
+          <div><div class="mn">Evidence</div><div class="mv" style="color:#a16207">3/4</div></div>
+          <div><div class="mn">Sophistication</div><div class="mv" style="color:#b91c1c">0/1</div></div>
+          <div><div class="mn">Total</div><div class="mv">4/6</div></div>
+        </div>
+        <p style="font-size:.72rem;color:#86868b;margin:.7rem 0 0">Second-fastest point: finish the <i>"sought to mend"</i> quote — say what it does for her argument. That's Row B's 4th.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.2rem">All three are buildable on what Jev returns. The difference is what the student looks at first — and whether they learn the rubric, see their own prose, or just get told the next move.</p>

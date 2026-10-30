@@ -1,0 +1,180 @@
+<style>
+  .bbwrap { font-family: Inter, -apple-system, system-ui, sans-serif; }
+  .bb { background:#f1f1f1; border:1px solid #d7d7d7; border-radius:10px; overflow:hidden; }
+  .bb-top { background:#e6edf8; padding:.6rem 1rem; display:flex; align-items:center; gap:.6rem;
+            border-bottom:1px solid #c9d4e8; font-size:.74rem; color:#2a3b5f; font-weight:600; }
+  .bb-dot { width:9px; height:9px; border-radius:50%; background:#b91c1c; }
+  .bb-top .score { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700; color:#1d1d1f; font-size:.82rem; }
+  .bb-pane { background:#fff; padding:1.1rem 1.25rem; }
+  .prompt { font-family:Georgia,'Times New Roman',serif; font-size:.79rem; line-height:1.55; color:#4b4b4b;
+            background:#fafafa; border-left:3px solid #3151c9; padding:.55rem .75rem; margin-bottom:.9rem; }
+  .essay { font-family:Georgia,'Times New Roman',serif; font-size:.85rem; line-height:1.95; color:#1d1d1f; }
+  .essay p { margin:0 0 .75rem; }
+
+  .facts { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.85rem; align-items:center; }
+  .fact { font-size:.63rem; background:#f4f4f5; border:1px solid #e4e4e7; border-radius:5px; padding:.18rem .45rem; color:#52525b; }
+  .fact b { color:#18181b; font-variant-numeric:tabular-nums; }
+  .fact.hdr { background:none; border:none; color:#a1a1aa; font-weight:700; letter-spacing:.07em; text-transform:uppercase; font-size:.58rem; padding-left:0; }
+
+  mark { padding:.06em 0; cursor:pointer; transition:filter .12s; }
+  mark:hover { filter:brightness(.95); }
+  .m-a { background:#dcfce7; border-bottom:2px solid #22c55e; }
+  .m-b { background:#dbeafe; border-bottom:2px solid #3b82f6; }
+  .m-c { background:#fef9c3; border-bottom:2px solid #eab308; }
+  .m-x { background:#fee2e2; border-bottom:2px solid #ef4444; }
+  .badge { font-family:Inter,sans-serif; font-size:.6rem; color:#fff; border-radius:4px; cursor:pointer;
+           padding:.1em .4em; margin-left:.25rem; vertical-align:.14em; font-weight:650; white-space:nowrap; }
+  .g-a { background:#16a34a; } .g-b { background:#2563eb; } .g-c { background:#ca8a04; } .g-x { background:#dc2626; }
+
+  .blocks { display:flex; gap:.5rem; margin-top:1rem; }
+  .blk { flex:1; border:1px solid #e4e4e7; border-radius:9px; padding:.65rem .7rem; background:#fff; cursor:pointer;
+         box-shadow:0 2px 14px rgba(0,0,0,.05); transition:transform .1s, box-shadow .1s; position:relative; }
+  .blk:hover { transform:translateY(-1px); box-shadow:0 4px 18px rgba(0,0,0,.1); }
+  .blk .bn { font-size:.68rem; font-weight:650; color:#3f3f46; }
+  .blk .bp { font-size:1.15rem; font-weight:700; font-variant-numeric:tabular-nums; margin-top:.1rem; }
+  .blk .bb2 { font-size:.59rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-top:.2rem; }
+  .blk .more { position:absolute; top:.55rem; right:.6rem; font-size:.62rem; color:#a1a1aa; }
+  .k-e { background:#F0FDF4; border-color:#bbf7d0; } .k-e .bp,.k-e .bb2 { color:#15803d; }
+  .k-o { background:#FEFCE8; border-color:#fde68a; } .k-o .bp,.k-o .bb2 { color:#a16207; }
+  .k-m { background:#FEF2F2; border-color:#fecaca; } .k-m .bp,.k-m .bb2 { color:#b91c1c; }
+
+  .ovl { display:none; position:fixed; inset:0; background:rgba(15,18,28,.55); z-index:9999;
+         align-items:center; justify-content:center; padding:2rem; }
+  .ovl:target, .ovl.open { display:flex; }
+  .mdl { background:#fff; border-radius:12px; max-width:560px; width:100%; max-height:84vh; overflow:auto;
+         box-shadow:0 20px 60px rgba(0,0,0,.3); font-family:Inter,sans-serif; }
+  .mdl-top { padding:.9rem 1.1rem; border-bottom:1px solid #ececf0; display:flex; align-items:center; gap:.55rem; }
+  .mdl-top h3 { margin:0; font-size:.95rem; font-weight:650; }
+  .mdl-top .pill { font-size:.6rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+                   padding:.14rem .45rem; border-radius:99px; color:#fff; }
+  .mdl-top .pts { margin-left:auto; font-size:1.1rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .x { cursor:pointer; color:#a1a1aa; font-size:1.1rem; text-decoration:none; line-height:1; padding-left:.4rem; }
+  .mdl-body { padding:1rem 1.1rem; }
+  .sec { margin-bottom:.95rem; }
+  .sec .h { font-size:.58rem; letter-spacing:.09em; text-transform:uppercase; color:#a1a1aa; font-weight:700; margin-bottom:.3rem; }
+  .cb { font-family:Georgia,serif; font-size:.76rem; line-height:1.6; color:#3f3f46; background:#fafafa;
+        border-left:3px solid #d4d4d8; padding:.5rem .7rem; border-radius:0 4px 4px 0; }
+  .cb .src { display:block; margin-top:.35rem; font-family:Inter,sans-serif; font-size:.6rem; color:#a1a1aa; }
+  .quote { font-family:Georgia,serif; font-size:.78rem; line-height:1.6; padding:.4rem .6rem; border-radius:5px; margin-bottom:.35rem; }
+  .q-ok { background:#F0FDF4; border-left:3px solid #22c55e; }
+  .q-no { background:#FEF2F2; border-left:3px solid #ef4444; }
+  .quote .why { display:block; font-family:Inter,sans-serif; font-size:.66rem; color:#71717a; margin-top:.2rem; }
+  .coachbox { background:#eff6ff; border:1px solid #bfdbfe; border-radius:7px; padding:.65rem .75rem; }
+  .coachbox .h2 { font-size:.68rem; font-weight:700; color:#1e3a8a; margin-bottom:.25rem; }
+  .coachbox p { margin:0; font-size:.76rem; line-height:1.6; color:#1e40af; }
+  .meter { height:6px; background:#ececf0; border-radius:99px; overflow:hidden; margin:.5rem 0 .25rem; }
+  .meter i { display:block; height:100%; border-radius:99px; }
+  .mcap { display:flex; justify-content:space-between; font-size:.6rem; color:#a1a1aa; }
+  .foot { border-top:1px solid #ececf0; padding:.6rem 1.1rem; font-size:.63rem; color:#a1a1aa; line-height:1.5; }
+  .foot code { background:#f4f4f5; padding:.05em .3em; border-radius:3px; font-size:.95em; color:#52525b; }
+</style>
+
+<h2>B with A inside it</h2>
+<p class="subtitle">The essay leads. Click any highlight, badge, or rubric block to open the full row. AP Lang Q2 — scored 4/6.</p>
+
+<div class="bbwrap">
+  <div class="bb">
+    <div class="bb-top"><span class="bb-dot"></span> English Language · Q2 Rhetorical Analysis
+      <span class="score">4 / 6</span></div>
+    <div class="bb-pane">
+      <div class="prompt">Thatcher, <i>Eulogy for Ronald Reagan</i> (2004). Read the passage carefully. Write an essay that analyzes the rhetorical choices Thatcher makes to convey her message.</div>
+
+      <div class="facts">
+        <span class="fact hdr">Measured, not judged</span>
+        <span class="fact">words <b>412</b></span><span class="fact">paragraphs <b>4</b></span>
+        <span class="fact">quoted spans <b>2</b></span><span class="fact">mechanics <b>clean</b></span>
+      </div>
+
+      <div class="essay">
+        <p><mark class="m-a" onclick="document.getElementById('row-a').classList.add('open')">In her eulogy for Ronald Reagan, Thatcher uses a respectful but firm tone to honor her friend while defending a legacy she knows is contested.</mark><span class="badge g-a" onclick="document.getElementById('row-a').classList.add('open')">A · thesis +1</span></p>
+
+        <p><mark class="m-b" onclick="document.getElementById('row-b').classList.add('open')">She returns to the word "freedom" again and again, tying Reagan's name to the idea itself, so that an attack on the man becomes an attack on the thing he stood for.</mark><span class="badge g-b" onclick="document.getElementById('row-b').classList.add('open')">B · choice → purpose ✓</span></p>
+
+        <p>By calling him a man who <mark class="m-x" onclick="document.getElementById('row-b').classList.add('open')">"sought to mend,"</mark><span class="badge g-x" onclick="document.getElementById('row-b').classList.add('open')">B · quote, no purpose</span> she reframes his hardest Cold War decisions as healing rather than aggression. <mark class="m-c" onclick="document.getElementById('row-c').classList.add('open')">This disarms a reader who came in skeptical of him.</mark><span class="badge g-c" onclick="document.getElementById('row-c').classList.add('open')">C · audience seen, not explained</span></p>
+      </div>
+
+      <div class="blocks">
+        <div class="blk k-e" onclick="document.getElementById('row-a').classList.add('open')">
+          <span class="more">▸</span><div class="bn">Row A · Thesis</div><div class="bp">1/1</div><div class="bb2">Earned</div></div>
+        <div class="blk k-o" onclick="document.getElementById('row-b').classList.add('open')">
+          <span class="more">▸</span><div class="bn">Row B · Evidence &amp; Commentary</div><div class="bp">3/4</div><div class="bb2">One short</div></div>
+        <div class="blk k-m" onclick="document.getElementById('row-c').classList.add('open')">
+          <span class="more">▸</span><div class="bn">Row C · Sophistication</div><div class="bp">0/1</div><div class="bb2">On the line</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROW A MODAL -->
+<div class="ovl" id="row-a" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mdl">
+    <div class="mdl-top"><h3>Row A · Thesis</h3><span class="pill" style="background:#15803d">Earned</span>
+      <span class="pts" style="color:#15803d">1/1</span>
+      <a class="x" onclick="document.getElementById('row-a').classList.remove('open')">✕</a></div>
+    <div class="mdl-body">
+      <div class="sec"><div class="h">What College Board asks</div>
+        <div class="cb">“Responds to the prompt with a defensible thesis that analyzes the writer's rhetorical choices.”
+          <span class="src">AP English Language and Composition — Q2 Scoring Guidelines, Row A</span></div></div>
+      <div class="sec"><div class="h">In your essay</div>
+        <div class="quote q-ok">“…uses a respectful but firm tone to honor her friend while defending a legacy she knows is contested.”
+          <span class="why">A claim about <i>how</i> she writes and <i>why</i> — not a restatement of the prompt. That's what makes it defensible.</span></div></div>
+      <div class="sec"><div class="h">Why this isn't automatic</div>
+        <div class="cb" style="border-left-color:#bbf7d0">Four things would have cost you this point: restating the prompt, summarizing the passage, describing choices without a claim, or naming devices without saying what they do. You avoided all four.</div></div>
+    </div>
+    <div class="foot">Judged as one yes/no decision. Jev was asked the sentence above verbatim, with both the earning and the four non-earning conditions spelled out.</div>
+  </div>
+</div>
+
+<!-- ROW B MODAL -->
+<div class="ovl" id="row-b" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mdl">
+    <div class="mdl-top"><h3>Row B · Evidence &amp; Commentary</h3><span class="pill" style="background:#a16207">One short</span>
+      <span class="pts" style="color:#a16207">3/4</span>
+      <a class="x" onclick="document.getElementById('row-b').classList.remove('open')">✕</a></div>
+    <div class="mdl-body">
+      <div class="sec"><div class="h">Where you landed</div>
+        <div class="meter"><i style="width:75%;background:#eab308"></i></div>
+        <div class="mcap"><span>0</span><span>1</span><span>2</span><span>3 ◂ you</span><span>4</span></div></div>
+      <div class="sec"><div class="h">What you earned — level 3</div>
+        <div class="cb">“Provides specific evidence to support all claims in a line of reasoning. <b>Explains how <i>some</i> of the evidence supports a line of reasoning.</b> AND Explains how <i>at least one</i> rhetorical choice contributes to the writer's argument, purpose, or message.”</div></div>
+      <div class="sec"><div class="h">What level 4 adds</div>
+        <div class="cb" style="border-left-color:#fde68a">“<b>Consistently</b> explains how the evidence supports a line of reasoning. AND Explains how <b>multiple</b> rhetorical choices contribute to the writer's argument, purpose, or message.”
+          <span class="src">The evidence requirement is identical at 3 and 4. Only the commentary changes.</span></div></div>
+      <div class="sec"><div class="h">In your essay</div>
+        <div class="quote q-ok">“…tying Reagan's name to the idea itself, so that an attack on the man becomes an attack on the thing he stood for.”
+          <span class="why">A choice, tied to what it accomplishes. This is the one that earned level 3.</span></div>
+        <div class="quote q-no">“By calling him a man who <i>‘sought to mend’</i>… she reframes his hardest Cold War decisions as healing rather than aggression.”
+          <span class="why">You named the move and paraphrased it — but never said what it <i>does for her argument</i>. The sentence stops one clause early.</span></div></div>
+      <div class="sec"><div class="coachbox"><div class="h2">To earn the fourth point</div>
+        <p>Finish the “sought to mend” sentence. You said it reframes him as healing — now say why that matters to <i>her</i> case: it lets her defend the hard decisions without ever having to argue for them. Two explained choices instead of one is the whole difference between 3 and 4.</p></div></div>
+    </div>
+    <div class="foot">Judged as a 0–4 rubric score using College Board's five level descriptors verbatim. Counts above the essay — words, paragraphs, quoted spans — were computed in code, never asked.</div>
+  </div>
+</div>
+
+<!-- ROW C MODAL -->
+<div class="ovl" id="row-c" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mdl">
+    <div class="mdl-top"><h3>Row C · Sophistication</h3><span class="pill" style="background:#a16207">On the line</span>
+      <span class="pts" style="color:#b91c1c">0/1</span>
+      <a class="x" onclick="document.getElementById('row-c').classList.remove('open')">✕</a></div>
+    <div class="mdl-body">
+      <div class="sec"><div class="h">Where you landed</div>
+        <div class="meter"><i style="width:49%;background:#eab308"></i></div>
+        <div class="mcap"><span>Not yet</span><span>On the line ◂ you</span><span>Earned</span></div></div>
+      <div class="sec"><div class="h">What College Board asks — any one of three</div>
+        <div class="cb">Explains the significance or relevance of the writer's rhetorical choices <b>given the rhetorical situation</b>; <b>or</b> explains the purpose or function of the passage's complexities or tensions; <b>or</b> employs a vivid and persuasive style throughout.
+          <span class="src">Q2 Scoring Guidelines, Row C. Q1 and Q3 offer four paths, not three — and different ones.</span></div></div>
+      <div class="sec"><div class="h">In your essay</div>
+        <div class="quote q-no">“This disarms a reader who came in skeptical of him.”
+          <span class="why">You identified the audience and their resistance — that is the hard half of path one. But you stopped at the observation. The point needs the <i>situation</i>: why this audience, at this moment, made that choice necessary.</span></div></div>
+      <div class="sec"><div class="coachbox"><div class="h2">Your closest path</div>
+        <p>One sentence after “…skeptical of him.” In 2004 Thatcher is eulogising a man much of her audience still blames for the Cold War's hardest years. Say that, and the softening stops being a nice touch and becomes a necessary one. That's the sophistication point.</p></div></div>
+      <div class="sec"><div class="h">Two ways people lose this row</div>
+        <div class="cb" style="border-left-color:#fecaca">Examining individual choices without examining the relationships among them. Or oversimplifying a tension in the text. Both are listed by College Board as non-earning.</div></div>
+    </div>
+    <div class="foot">Judged as three independent yes/no decisions — one per earning path — combined in code. You were closest on the first.</div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.3rem">Every number here is something Jev returns. Every sentence of coaching is pre-written against a rubric path and <i>selected</i> by Jev — it is not generated, so it cannot invent a reason the score doesn't support.</p>

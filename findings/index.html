@@ -1,0 +1,199 @@
+<title>FRQ Grader Bake-Off</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: single reading column, full-bleed data tables, scoring-sheet vernacular */
+  :root {
+    --paper:        #f6f7f9;
+    --surface:      #ffffff;
+    --ink:          #15181f;
+    --ink-soft:     #555c6b;
+    --ink-faint:    #8a92a2;
+    --rule:         #dde1e8;
+    --rule-strong:  #c3c9d4;
+    --mark:         #b4232b;   /* the reader's pen — used once, for the result that invalidates the board */
+    --deep:         #1f3a63;
+    --good:         #1a6d4a;
+    --warn-bg:      #fdf4e7;
+    --mark-bg:      #fbeced;
+    --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-body:    "Source Sans 3", -apple-system, system-ui, sans-serif;
+    --font-data:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #13161c; --surface: #1a1e26; --ink: #e8eaf0; --ink-soft: #a3abbb; --ink-faint: #737c8d;
+      --rule: #2a2f3a; --rule-strong: #3a4150; --mark: #f1676f; --deep: #8fb3e8;
+      --good: #5ccd94; --warn-bg: #2a2317; --mark-bg: #2d1a1d; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #13161c; --surface: #1a1e26; --ink: #e8eaf0; --ink-soft: #a3abbb; --ink-faint: #737c8d;
+    --rule: #2a2f3a; --rule-strong: #3a4150; --mark: #f1676f; --deep: #8fb3e8;
+    --good: #5ccd94; --warn-bg: #2a2317; --mark-bg: #2d1a1d; color-scheme: dark;
+  }
+
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-body);
+         font-size: 16px; line-height: 1.62; }
+  .wrap { max-width: 760px; margin: 0 auto;
+          padding-left: max(16px, env(safe-area-inset-left, 0px));
+          padding-right: max(16px, env(safe-area-inset-right, 0px));
+          padding-block: 2.6rem 4rem; }
+
+  h1 { font-family: var(--font-display); font-size: clamp(1.9rem, 5vw, 2.6rem); font-weight: 700;
+       line-height: 1.15; margin: 0 0 .5rem; text-wrap: balance; letter-spacing: -.012em; }
+  h2 { font-family: var(--font-display); font-size: 1.32rem; font-weight: 600; margin: 2.8rem 0 .65rem;
+       text-wrap: balance; letter-spacing: -.005em; padding-top: 1.1rem; border-top: 1px solid var(--rule); }
+  h3 { font-family: var(--font-body); font-size: .93rem; font-weight: 700; margin: 1.6rem 0 .35rem;
+       letter-spacing: .005em; }
+  p { margin: 0 0 .85rem; }
+  .lede { font-family: var(--font-display); font-size: 1.12rem; line-height: 1.56; color: var(--ink-soft);
+          margin-bottom: 1.6rem; }
+  .eyebrow { font-family: var(--font-body); font-size: .68rem; font-weight: 700; letter-spacing: .13em;
+             text-transform: uppercase; color: var(--ink-faint); margin-bottom: .7rem; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  code { font-family: var(--font-data); font-size: .87em; background: var(--surface);
+         border: 1px solid var(--rule); border-radius: 3px; padding: .06em .32em; }
+  ul { margin: 0 0 .9rem; padding-left: 1.15rem; }
+  li { margin-bottom: .4rem; }
+
+  .scroller { overflow-x: auto; margin: 1rem 0 1.2rem; border: 1px solid var(--rule);
+              border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .83rem; min-width: 540px; }
+  th, td { text-align: left; padding: .52rem .75rem; border-bottom: 1px solid var(--rule); }
+  thead th { font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-faint);
+             font-weight: 700; border-bottom: 1.5px solid var(--rule-strong); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: var(--font-data);
+                   font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .arm { font-weight: 600; }
+  .sub { display: block; font-size: .74rem; color: var(--ink-faint); font-weight: 400; }
+  tr.baseline { background: var(--mark-bg); }
+  tr.baseline td { color: var(--mark); font-weight: 600; }
+  tr.void td { color: var(--ink-faint); text-decoration-color: var(--ink-faint); }
+
+  .callout { border-left: 3px solid var(--mark); background: var(--mark-bg); border-radius: 0 6px 6px 0;
+             padding: .95rem 1.1rem; margin: 1.3rem 0; }
+  .callout .eyebrow { color: var(--mark); margin-bottom: .35rem; }
+  .callout p:last-child { margin-bottom: 0; }
+  .note { border-left: 3px solid var(--rule-strong); background: var(--surface); border-radius: 0 6px 6px 0;
+          padding: .9rem 1.05rem; margin: 1.2rem 0; font-size: .92rem; }
+  .note p:last-child { margin-bottom: 0; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; margin: 1.4rem 0; }
+  .kpi { border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: .7rem .85rem; min-width: 0; }
+  .kpi .v { font-family: var(--font-data); font-size: 1.5rem; font-weight: 600; line-height: 1.1;
+            font-variant-numeric: tabular-nums; }
+  .kpi .k { font-size: .72rem; color: var(--ink-faint); margin-top: .22rem; line-height: 1.35; }
+
+  footer { margin-top: 3rem; padding-top: 1.1rem; border-top: 1px solid var(--rule);
+           font-size: .8rem; color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">AP Odyssey · engine evaluation · 30 Oct 2026</div>
+  <h1>Can we grade AP Lang essays automatically?</h1>
+  <p class="lede">We ran four graders against all 54 essays College&nbsp;Board has published with official scores. Short answer: not well enough to put a grade on, but well enough to coach with — and the cheapest option is as good as the most expensive at the thing coaching actually needs.</p>
+
+  <h2>What we were testing</h2>
+  <p>AP Odyssey's roadmap has an FRQ grader on it: a student writes a free-response essay, gets scored against College Board's rubric, and is told how to earn the next point. The open question was whether any model can do that reliably enough to show a student.</p>
+  <p>Every AP Lang essay is scored out of 6, in three rows: <strong>Thesis</strong> (0–1), <strong>Evidence&nbsp;&amp;&nbsp;Commentary</strong> (0–4), and <strong>Sophistication</strong> (0–1). Those three numbers are the whole task.</p>
+
+  <h2>Why BaconWrite is in this</h2>
+  <p>Most of you haven't touched it, so: <strong>BaconWrite</strong> is the <code>HS-Writing-Course</code> repo — a separate superbuilders project building a structured high-school writing course. It's a Next.js app with a production AI grader that scores student writing against rubrics. It isn't AP-specific, but it's the closest working thing to what we're proposing, and it matters here for three reasons.</p>
+  <p><strong>They already evaluated this exact model.</strong> In September they ran Jev against their Claude grader on 101 submissions and found Claude clearly better — 95.0% against 86.1%, statistically solid. Read only that, and you'd conclude Jev is the wrong tool and stop.</p>
+  <p><strong>But their test used synthetic inputs.</strong> Their gold labels were author-assigned intents on AI-written practice responses, not scores from human raters. Their own writeup says so, and ends by naming the test that would actually settle it — real human-scored essays — as blocked on a data-sharing approval that hadn't come through.</p>
+  <p><strong>And they have an AP panel already measured against real AP readers.</strong> A judge panel scoring the AP three-row rubric, agreement 0.672 at n=18, with a confidence interval of [0.318, 0.836] — wide enough to be compatible with almost anything.</p>
+  <p>College Board's published sample essays are public documents with no student data in them. So the test BaconWrite was blocked on, we could just run. We used their panel as one of our four graders.</p>
+
+  <h2>The scoreboard</h2>
+  <p>54 essays, all three questions, 2023 through 2025 — the complete published population for those years. Each grader saw the essay, the prompt, the source material, and College Board's verbatim rubric. None saw the official score.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>Grader</th>
+          <th class="num">Evidence row<br>exact</th>
+          <th class="num">Within 1</th>
+          <th class="num">Ranking<br>accuracy</th>
+          <th class="num">Cost<br>/essay</th>
+          <th class="num">Time<br>/essay</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="arm">BaconWrite AP panel<span class="sub">Opus, 5 calls</span></td>
+          <td class="num">33/54 · 61%</td><td class="num">53/54</td><td class="num">83%</td>
+          <td class="num">$0.223</td><td class="num">15.1 s</td>
+        </tr>
+        <tr>
+          <td class="arm">Claude Sonnet<span class="sub">our control, 1 call</span></td>
+          <td class="num">25/54 · 46%</td><td class="num">52/54</td><td class="num">82%</td>
+          <td class="num">$0.030</td><td class="num">14.3 s</td>
+        </tr>
+        <tr>
+          <td class="arm">Jev<span class="sub">TypeSafe System One</span></td>
+          <td class="num">24/54 · 44%</td><td class="num">53/54</td><td class="num">82%</td>
+          <td class="num">~$0.0005</td><td class="num">0.84 s</td>
+        </tr>
+        <tr class="baseline">
+          <td class="arm">Reads only the filename<span class="sub">no essay, no model</span></td>
+          <td class="num">39/54 · 72%</td><td class="num">54/54</td><td class="num">100%</td>
+          <td class="num">$0</td><td class="num">0 s</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <div class="eyebrow">The problem with that table</div>
+    <p>College Board labels its three samples per question A, B and C — and <strong>A is always the best one</strong>, in all 18 question sets we pulled. So a ten-line script that reads nothing but that letter beats every real grader.</p>
+    <p>No grader saw the letter; we checked all four code paths. They just can't beat a cheat sheet they never read. <strong>This corpus can't settle how accurate anyone is.</strong> Every absolute number above has to be read next to that red row.</p>
+  </div>
+
+  <h2>What survives anyway</h2>
+
+  <h3>Nobody is close to a grade of record</h3>
+  <p>The best grader agreed with College Board on all three rows for 24 of 54 essays. For a score that goes on a student's record, the exact number has to be right, and none of these are near that. This isn't marginal — it's settled.</p>
+
+  <h3>"Claude beats Jev" does not replicate</h3>
+  <p>BaconWrite found that gap at a significance of p=0.004 on their synthetic set. On real human-scored essays it's p=0.136 — well inside noise. The expensive panel leads on every point estimate and trails on none, but at this sample size the $0.22 grader and the $0.0005 grader are not distinguishable.</p>
+
+  <h3>They are all equally good at ranking</h3>
+  <p>Given two essays, which is stronger? Every grader lands at 82–83%, and every pairwise test between them is non-significant. <strong>That is the capability a coach needs</strong> — "this draft is stronger than your last, and here's where" — and the half-second classifier delivers it as well as the fifteen-second Opus panel.</p>
+
+  <h3>Jev has one specific, fixable flaw</h3>
+  <p>It never awards a 4. Not once in 54 essays, 16 of which earned one. But its underlying score separates those 16 from the rest by a clear margin — it sees them and won't say so. That's a scale that needs rebasing, not a model that can't read. We tried one fix: it recovered 5 of the 16 but lost accuracy elsewhere. Lateral, not a win.</p>
+
+  <h3>The models had not memorized the essays</h3>
+  <p>Worth ruling out, since these PDFs have been public for years. Three probes: zero shared eight-word runs across 30 continuation attempts, zero self-reported recall across 108 asks, and <em>below-chance</em> accuracy at naming which year an essay came from. Clean.</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">0.757</div><div class="k">BaconWrite panel agreement at n=54, up from 0.672 at n=18</div></div>
+    <div class="kpi"><div class="v">59%</div><div class="k">narrower confidence interval — their number held up, now well established</div></div>
+    <div class="kpi"><div class="v">18×</div><div class="k">Jev's measured speed advantage</div></div>
+    <div class="kpi"><div class="v">0/16</div><div class="k">top-scale essays Jev scored correctly</div></div>
+  </div>
+
+  <h2>Two things we got wrong</h2>
+  <div class="note">
+    <p><strong>Our BaconWrite "production grader" arm was void, and that was our fault.</strong> It scored 8 of 54, which looked like a damning result for their system. It wasn't. Our adapter modelled the whole 0–4 evidence row as a single pass/fail criterion, so it could only ever emit 0 or 4. Their grader does proportional partial credit across weighted criteria — we just never gave it more than one criterion to weigh. The arm is dropped. <strong>No finding here reflects badly on BaconWrite's grader</strong>; their AP panel was our best performer.</p>
+    <p><strong>Jev is 18× faster than the panel, not 64×.</strong> The 64× figure came from BaconWrite's writeup on a different task and we repeated it before measuring. The cost advantage is real and large but derived from token counts against a published rate, not recorded directly.</p>
+  </div>
+
+  <h2>What we'd do next</h2>
+  <ul>
+    <li><strong>Use Jev for the student-facing coach.</strong> It ranks as well as anything we tested, returns in under a second, and costs essentially nothing. It also errs low rather than high — a coach that under-rates never tells a student a weak draft is excellent.</li>
+    <li><strong>Don't ship any of these as a grade.</strong> Including the expensive ones.</li>
+    <li><strong>Rebase Jev's two scales.</strong> Both ceilings are calibration, not comprehension. Recalibrate against the full 54, not the 12 we started with — the thresholds moved in the opposite direction once the corpus grew.</li>
+    <li><strong>Build the 2026 corpus with the letters scrambled.</strong> The prompts and rubric are already downloaded; College Board hasn't published 2026 samples yet. A set where the filename doesn't leak the rank is the only way to get a clean accuracy number — and it's after every model's training cutoff, which closes the last open question from the contamination probe.</li>
+    <li><strong>Test the hybrid.</strong> Run Jev, escalate to the panel only where Jev lands at its ceiling. That halves cost and time and sits between the two on accuracy, though not yet distinguishably from either.</li>
+  </ul>
+
+  <footer>
+    54 essays · AP English Language &amp; Composition, 2023–2025 · four graders, paired on identical inputs · corpus held locally, College Board copyright, not redistributed.
+  </footer>
+</div>
