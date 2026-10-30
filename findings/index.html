@@ -11,7 +11,7 @@
     --ink-faint:    #8a92a2;
     --rule:         #dde1e8;
     --rule-strong:  #c3c9d4;
-    --mark:         #b4232b;   /* the reader's pen — used once, for the result that invalidates the board */
+    --mark:         #b4232b;   /* the reader's pen — reserved for results that undercut a claim on this page */
     --deep:         #1f3a63;
     --good:         #1a6d4a;
     --warn-bg:      #fdf4e7;
@@ -166,7 +166,7 @@
   <p>Given two essays, which is stronger? Every grader lands at 82–83%, and every pairwise test between them is non-significant. <strong>That is the capability a coach needs</strong> — "this draft is stronger than your last, and here's where" — and the half-second classifier delivers it as well as the fifteen-second Opus panel.</p>
 
   <h3>Jev has one specific, fixable flaw</h3>
-  <p>It never awards a 4. Not once in 54 essays, 16 of which earned one. But its underlying score separates those 16 from the rest by a clear margin — it sees them and won't say so. That's a scale that needs rebasing, not a model that can't read. We tried one fix: it recovered 5 of the 16 but lost accuracy elsewhere. Lateral, not a win.</p>
+  <p>It never awards a 4. Not once in 54 essays, 16 of which earned one. But its underlying score separates those 16 from the rest by a clear margin &mdash; it sees them and won't say so. That is a scale that needs rebasing, not a model that cannot read. We fixed it; the section below is what that cost.</p>
 
   <h3>The models had not memorized the essays</h3>
   <p>Worth ruling out, since these PDFs have been public for years. Three probes: zero shared eight-word runs across 30 continuation attempts, zero self-reported recall across 108 asks, and <em>below-chance</em> accuracy at naming which year an essay came from. Clean.</p>
@@ -184,11 +184,144 @@
     <p><strong>Jev is 18× faster than the panel, not 64×.</strong> The 64× figure came from BaconWrite's writeup on a different task and we repeated it before measuring. The cost advantage is real and large but derived from token counts against a published rate, not recorded directly.</p>
   </div>
 
+  <h2>Fixing Jev's calibration</h2>
+  <p>Jev's 24 of 54 understated it, and we could say exactly why. Its signal was trapped in <code>[1.24, 3.38]</code>, so its own decode never emitted a 4. Sixteen of the 54 essays are 4s, which means 16 were marked wrong before the grader read a word. Its predictions came out <code>{1:1, 2:26, 3:27, 4:0}</code> against a gold spread of <code>{1:8, 2:13, 3:17, 4:16}</code>; 23 of its 30 errors sat at the two ends of the scale.</p>
+  <p>That is a range problem, not a judgment problem. The obvious fix is to ask better — so we tried that first, on all 54 essays, live. It failed completely, and the failure is the most useful result in this section.</p>
+
+  <h3>Four ways of asking, none of which moved it</h3>
+  <p>We gave Jev, in turn, two officially-scored essays as worked anchors; a flat statement of the real score distribution including the sentence <em>“Level 4 is a common outcome, not a rare one”</em>; a decomposition that bypasses the score head entirely and asks four yes/no questions (<em>is this at least a 1? a 2? a 3? a 4?</em>) composed in code; and a head-to-head comparison against a known level-3 anchor. 324 calls, no errors, about eight cents.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>How we asked</th>
+          <th class="num">Signal range</th>
+          <th class="num">Exact</th>
+          <th class="num">Level-4<br>recall</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="arm">Archived run<span class="sub">the original scoring pass</span></td>
+          <td class="num">1.24 – 3.38</td><td class="num">24/54</td><td class="num">0/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Re-run, byte-identical<span class="sub">control — is the ceiling even real?</span></td>
+          <td class="num">1.23 – 3.39</td><td class="num">24/54</td><td class="num">0/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Worked anchors in context<span class="sub">two essays with their official scores</span></td>
+          <td class="num">1.26 – 3.38</td><td class="num">23/54</td><td class="num">0/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Score distribution stated<span class="sub">“4s are common”, in so many words</span></td>
+          <td class="num">1.39 – 3.36</td><td class="num">24/54</td><td class="num">0/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Yes/no ladder<span class="sub">four questions, composed in code</span></td>
+          <td class="num">1.47 – 3.39</td><td class="num">22/54</td><td class="num">0/16</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The control settles it: re-running the identical request reproduces the ceiling to within <strong>0.01</strong>. It is not noise, and no amount of better prompting touched it — anchors moved the top of the range by −0.01, the stated distribution by −0.03. The ladder was the most promising variant and the most carefully built, and it is <em>internally coherent</em> — monotone on all 54 essays, which is a real result about Jev's consistency. It also scores 22, below the baseline it was meant to beat. Its <em>“at least a 4?”</em> probability never exceeds 0.670 anywhere in the corpus.</p>
+  <p>So Jev's reluctance at the top of the scale is not an information deficit. It is a property of the calibrated heads, and it shows up in the yes/no head exactly as it does in the score head. You cannot ask your way out of it — which means the honest fix is to leave Jev's question alone and move the grade boundaries afterwards.</p>
+
+  <h3>Moving the boundaries instead</h3>
+  <p>A monotone rescaling of the signal Jev already produced. No new calls. We fitted five mappings and scored each two ways — leave-one-out, and a <strong>year-holdout</strong> that fits on two exam years and scores the third, rotated. Only the second tests whether a mapping survives a new prompt set, a new rubric and the 2023/24 transcription boundary.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>Mapping of the evidence signal</th>
+          <th class="num">Same data<br>(inflated)</th>
+          <th class="num">Leave<br>one out</th>
+          <th class="num">Year<br>holdout</th>
+          <th class="num">Level-4<br>recall</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="baseline">
+          <td class="arm">None — Jev as shipped<span class="sub">argmax decode</span></td>
+          <td class="num">24/54</td><td class="num">24/54</td><td class="num">24/54</td><td class="num">0/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Linear rescale<span class="sub">stretch min–max onto 0–4</span></td>
+          <td class="num">25/54</td><td class="num">25/54</td><td class="num">24/54</td><td class="num">3/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Least-squares fit<span class="sub">regress on gold, round</span></td>
+          <td class="num">29/54</td><td class="num">28/54</td><td class="num">28/54</td><td class="num">9/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Quantile matching<span class="sub">rank onto the gold spread</span></td>
+          <td class="num">27/54</td><td class="num">27/54</td><td class="num">31/54</td><td class="num">12/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Grid-searched cut points<span class="sub">three thresholds, tuned</span></td>
+          <td class="num">35/54</td><td class="num">27/54</td><td class="num">29/54</td><td class="num">13/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Isotonic regression<span class="sub">most flexible</span></td>
+          <td class="num">35/54</td><td class="num">32/54</td><td class="num">29/54</td><td class="num">11/16</td>
+        </tr>
+        <tr>
+          <td class="arm">Ordinal logistic<span class="sub">proportional odds</span></td>
+          <td class="num">30/54</td><td class="num">30/54</td><td class="num">29/54</td><td class="num">11/16</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Every mapping that opens the top of the scale lands between 27 and 32. The two protocols disagree in exactly the way that tells you which number is real. Tuned cut points reach <strong>36 on the data they were fitted on &mdash; the best ordering anywhere in this study &mdash; and 24 on a held-out year</strong>, which is no better than shipping the broken decode. That twelve-point collapse is memorisation, measured. It also retires the 36 ceiling we quoted for Jev's ordering in an earlier draft: it was an oracle fitted on these same 54 essays, and it is not reachable. Isotonic regression is optimistic the same way, just less so. Quantile matching is the only mapping with no tuned parameters &mdash; it inherits the gold spread and searches for nothing &mdash; and it has the smallest gap between the two columns.</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">24 &rarr; 31</div><div class="k">of 54, held out by year. Jev moves from last to level with the Opus panel's 33.</div></div>
+    <div class="kpi"><div class="v">29&ndash;30</div><div class="k">of 54 &mdash; what the frozen thresholds deliver on a fresh Jev run. This is the deployment number.</div></div>
+    <div class="kpi"><div class="v">0 &rarr; 10</div><div class="k">of the 16 level-4 essays. The entire gain is here.</div></div>
+    <div class="kpi"><div class="v">37/54</div><div class="k">essays sit within Jev's own run-to-run drift of a threshold.</div></div>
+  </div>
+
+  <p>The headline hides three things, and all of them matter more than the headline.</p>
+  <p><strong>The gain is bought from the middle of the scale, and the bill is larger than it first looked.</strong> Our first pass reported the middle using predictions refitted on each fold. The module we would actually ship uses three frozen thresholds, and on those the damage is worse. Per gold level, before and after:</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th>Gold level</th>
+          <th class="num">Before</th>
+          <th class="num">After<br>(frozen)</th>
+          <th class="num">Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="arm">Level 1 <span class="sub">8 essays</span></td><td class="num">1/8</td><td class="num">5/8</td><td class="num">+4</td></tr>
+        <tr class="baseline"><td class="arm">Level 2 <span class="sub">13 essays</span></td><td class="num">12/13</td><td class="num">5/13</td><td class="num">&minus;7</td></tr>
+        <tr class="baseline"><td class="arm">Level 3 <span class="sub">17 essays</span></td><td class="num">11/17</td><td class="num">7/17</td><td class="num">&minus;4</td></tr>
+        <tr><td class="arm">Level 4 <span class="sub">16 essays</span></td><td class="num">0/16</td><td class="num">10/16</td><td class="num">+10</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Level 2 falls from 92% correct to 38%. Net, the shipped mapping is <strong>+3 essays</strong>, not +7 &mdash; nearly everything it gains at the top it hands back in the middle. Telling a 2 from a 3 is the most common real distinction in AP Lang scoring, and at that job this calibration is a regression. That is a genuine split by use case, not a footnote: if you need the middle, keep the uncalibrated head. Adjacent agreement moved the same way &mdash; 52 of 54 within one point after, 53 of 54 before.</p>
+  <p><strong>Most individual scores are coin flips.</strong> Jev's evidence signal drifts up to 0.18 between identical runs, and the usable part of its range is about one point wide, so the three thresholds sit close together. 37 of 54 essays land within 0.18 of one. Re-running the whole study with that drift injected, quantile matching holds at 30.2 ± 2.1 — but the grid-searched cut points, which looked better on the same data, fall to 27.3 ± 2.1 and have about a one-in-ten chance of beating no calibration at all. That is why we chose the mapping that scores lower in-sample: its thresholds do not sit wedged between adjacent training points.</p>
+  <p><strong>The run-to-run noise is bigger than the improvement.</strong> Fit the same mapping, then score it on the archived signal and on a fresh re-run of the byte-identical request: 27 and 32. A five-point swing from nothing but drift &mdash; larger than the entire gain we are claiming over the uncalibrated baseline. If Row&nbsp;B accuracy feeds a decision, average three reads of the signal before mapping; rank-averaging three reads held 32 with visibly less variance.</p>
+
+  <div class="callout">
+    <div class="eyebrow">What this does and does not change</div>
+    <p>Calibration is worth doing &mdash; it is free, it costs no latency, and it removes a defect that was costing Jev 16 essays before it read a word. It does not change the conclusion, and it is weaker than the headline suggests. The year-holdout says 31; leave-one-out says 27; the thresholds we would actually freeze and ship deliver 29&ndash;30 on a fresh run. With a standard error near &plusmn;3.7 essays, those are one number.</p>
+    <p>So is the comparison everyone asks about. We could not run McNemar against the Opus panel &mdash; only its 33/54 summary survives, not its per-essay calls &mdash; so we bounded it instead. On 54 essays, a two-essay gap gives p&nbsp;=&nbsp;0.500 even if every disagreement falls the same way. <strong>You need a gap near nine essays before any arrangement of this corpus reaches significance.</strong> Which means the panel was never significantly ahead of uncalibrated Jev either, at p&nbsp;=&nbsp;0.136. The right reading is not “Jev still loses.” It is that 24, 31 and 33 are three numbers this corpus cannot tell apart, and the gap that justified preferring the expensive panel was never established. Calibration moved Jev from looks-worse to indistinguishable. That changes what you may claim, not what was measured.</p>
+  </div>
+
   <h2>What we'd do next</h2>
   <ul>
-    <li><strong>Use Jev for the student-facing coach.</strong> It ranks as well as anything we tested, returns in under a second, and costs essentially nothing. It also errs low rather than high — a coach that under-rates never tells a student a weak draft is excellent.</li>
+    <li><strong>Use Jev for the student-facing coach.</strong> It ranks as well as anything we tested, returns in under a second, and costs essentially nothing. Ship it <em>uncalibrated</em> for coaching: the raw head errs low rather than high, and a coach that under-rates never tells a student a weak draft is excellent. Calibration voids that &mdash; the rescaled grader predicts 16&ndash;18 level-4s where there are 16, and runs slightly hot on a fresh pass. Reach for the calibrated thresholds when you need the top of the scale across a batch, not when you are talking to one student about one draft.</li>
     <li><strong>Don't ship any of these as a grade.</strong> Including the expensive ones.</li>
-    <li><strong>Rebase Jev's two scales.</strong> Both ceilings are calibration, not comprehension. Recalibrate against the full 54, not the 12 we started with — the thresholds moved in the opposite direction once the corpus grew.</li>
+    <li><strong>Change what Jev is asked, not where it is cut.</strong> Calibration is done and it bought a better ruler, not a better reader &mdash; the mapping is monotone, so Jev ranks all 54 essays in exactly the order it did before. The open move is to pre-segment the essay in code and ask one findable thing per unit (does this claim carry evidence? does this span explain <em>how</em>?), leaving every count to arithmetic. The honest caveat: the nearest thing we tested, the yes/no ladder, scored below baseline &mdash; though it still asked for a holistic level four times rather than asking about one claim at a time. Measure it by whether Jev's rows become <em>less</em> correlated with each other: ours sit at +0.807 where College&nbsp;Board's real rows sit at +0.558.</li>
     <li><strong>Build the 2026 corpus with the letters scrambled.</strong> The prompts and rubric are already downloaded; College Board hasn't published 2026 samples yet. A set where the filename doesn't leak the rank is the only way to get a clean accuracy number — and it's after every model's training cutoff, which closes the last open question from the contamination probe.</li>
     <li><strong>Test the hybrid.</strong> Run Jev, escalate to the panel only where Jev lands at its ceiling. That halves cost and time and sits between the two on accuracy, though not yet distinguishably from either.</li>
   </ul>
